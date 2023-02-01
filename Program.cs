@@ -1,5 +1,7 @@
 using ContactPro.Data;
 using ContactPro.Models;
+using ContactPro.Services;
+using ContactPro.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +15,14 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+// Custom Services
+
+builder.Services.AddScoped<IImageService, ImageService>();
+
+
+
 builder.Services.AddMvc();
 
 var app = builder.Build();

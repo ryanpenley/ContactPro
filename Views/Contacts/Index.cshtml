@@ -1,5 +1,10 @@
 ﻿@model IEnumerable<ContactPro.Models.Contact>
 
+@using ContactPro.Services.Interfaces;
+
+@inject IImageService _ImageService
+
+
 @{
     ViewData["Title"] = "Index";
 }
@@ -43,10 +48,7 @@
                 @Html.DisplayNameFor(model => model.PhoneNumber)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ImageData)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImageType)
+                Image
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Created)
@@ -91,17 +93,14 @@
                 @Html.DisplayFor(modelItem => item.PhoneNumber)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ImageData)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ImageType)
+                    <img src="@_ImageService.ConvertByteArrayToFile(item.ImageData!, item.ImageType!)" style="height:120px; width:120px"/>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Created)
             </td>
-            <td>
+@*            <td>
                 @Html.DisplayFor(modelItem => item.AppUser.Id)
-            </td>
+            </td>*@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

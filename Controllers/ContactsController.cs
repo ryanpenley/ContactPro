@@ -10,6 +10,7 @@ using ContactPro.Models;
 using ContactPro.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using ContactPro.Services.Interfaces;
 
 namespace ContactPro.Controllers
 {
@@ -18,11 +19,15 @@ namespace ContactPro.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IImageService _imageService;
 
-        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public ContactsController(ApplicationDbContext context, 
+                              UserManager<AppUser> userManager, 
+                                    IImageService imageService)
         {
             _context = context;
             _userManager = userManager;
+            _imageService = imageService;
         }
 
         // GET: Contacts
@@ -50,6 +55,8 @@ namespace ContactPro.Controllers
             var contact = await _context.Contacts
                 .Include(c => c.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+
             if (contact == null)
             {
                 return NotFound();
@@ -62,7 +69,6 @@ namespace ContactPro.Controllers
    
         public IActionResult Create()
         {
-            //ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id");
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
             return View();
@@ -74,7 +80,7 @@ namespace ContactPro.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
  
-        public async Task<IActionResult> Create([Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageData,ImageType,Created")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageFile")] Contact contact)
         {
 
             ModelState.Remove("AppUserId");
@@ -82,6 +88,14 @@ namespace ContactPro.Controllers
             if (ModelState.IsValid)
             {
                 contact.AppUserId = _userManager.GetUserId(User);
+
+                if(contact.ImageFile != null)
+                {
+                    contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
+                    contact.ImageType = contact.ImageFile.ContentType;
+                }
+
+
 
                 if (contact.BirthDate != null)
                 {
@@ -107,6 +121,8 @@ namespace ContactPro.Controllers
             {
                 return NotFound();
             }
+
+            ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
             var contact = await _context.Contacts.FindAsync(id);
             if (contact == null)
@@ -134,6 +150,23 @@ namespace ContactPro.Controllers
             {
                 try
                 {
+                    // Reformat Created Date 
+                    contact.Created = DateTime.SpecifyKind(contact.Created, DateTimeKind.Utc);
+
+                    // Reformat if Image was Updated
+                    if (contact.ImageFile != null)
+                    {
+                        contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
+                        contact.ImageType = contact.ImageFile.ContentType;
+                    }
+
+
+                    // Reformat Birth Date
+                    if (contact.BirthDate != null)
+                    {
+                        contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
+                    }
+
                     _context.Update(contact);
                     await _context.SaveChangesAsync();
                 }
