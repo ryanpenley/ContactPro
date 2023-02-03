@@ -149,6 +149,19 @@ main {
         cursor: pointer;
     }
 
+.imgicon {
+    display: inline;
+    height: 3.5rem;
+    margin: 0rem .3rem;
+}
+
+figcaption {
+    color: var(--cf-dark-color);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+
 .icon {
     font-size: 3.5rem;
 }

@@ -22,6 +22,8 @@ builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireCo
 
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IEmailSender, EmailService>();
+builder.Services.AddScoped<IContactProService, ContactProService>();
+
 
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));

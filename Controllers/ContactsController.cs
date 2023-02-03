@@ -20,14 +20,17 @@ namespace ContactPro.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
+        private readonly IContactProService _contactProService;
 
         public ContactsController(ApplicationDbContext context, 
                               UserManager<AppUser> userManager, 
-                                    IImageService imageService)
+                                    IImageService imageService,
+                                    IContactProService contactProService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
+            _contactProService = contactProService;
         }
 
         // GET: Contacts
@@ -150,15 +153,26 @@ namespace ContactPro.Controllers
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
+            var contact = await _context.Contacts
+                                        .Include(c=>c.Categories)
+                                        .FirstOrDefaultAsync(c=>c.Id == id);
+
+
+            // query and present the list of categories for the logged in user
             string? userId = _userManager.GetUserId(User);
 
             IEnumerable<Category> categoriesList = await _context.Categories
                                                                  .Where(c => c.AppUserId == userId)
                                                                  .ToListAsync();
 
-            ViewData["CategoryList"] = new MultiSelectList(categoriesList, "Id", "Name");
 
-            var contact = await _context.Contacts.FindAsync(id);
+            IEnumerable<int> currentCategories = contact!.Categories.Select(c => c.Id);
+
+
+            ViewData["CategoryList"] = new MultiSelectList(categoriesList, "Id", "Name", currentCategories);
+
+
+
             if (contact == null)
             {
                 return NotFound();
@@ -202,22 +216,23 @@ namespace ContactPro.Controllers
                     {
                         contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
                     }
-
+                      
                     _context.Update(contact);
+                    await _context.SaveChangesAsync();
 
-                    // TODO:
-                    // Add use of the ContactProService ????
-                    //
-                    //
-                    //// loops over selected categoryIds to find the category entities in the database
-                    //foreach (int catergoryId in selected)
-                    //{
-                    //    Category? category = await _context.Categories.FindAsync(catergoryId);
 
-                    //    category!.Contacts.Add(contact);
-                    //}
-                    //// saves category changes to the database
-                    //await _context.SaveChangesAsync();
+
+                    // Added ContactProService
+
+                    if(selected != null)
+                    {
+                        // 1. Remove Contact's categories
+                        await _contactProService.RemoveAllContactCategoriesAsync(contact.Id);
+
+                        // 2. Add selected categories to the contact
+                        await _contactProService.AddContactToCategoriesAsync(selected, contact.Id);
+
+                    }
 
                 }
                 catch (DbUpdateConcurrencyException)
