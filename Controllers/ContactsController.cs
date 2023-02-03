@@ -38,9 +38,12 @@ namespace ContactPro.Controllers
 
             List<Contact> contacts = new List<Contact>();
 
-            contacts = await _context.Contacts.Where(c => c.AppUserId == userId).ToListAsync();
+            IEnumerable<Contact> model = await _context.Contacts
+                                                        .Where(c => c.AppUserId == userId)
+                                                        .Include(c=>c.Categories)
+                                                        .ToListAsync();
 
-            return View(contacts);
+            return View(model);
         }
 
         // GET: Contacts/Details/5
@@ -67,8 +70,19 @@ namespace ContactPro.Controllers
 
         // GET: Contacts/Create
    
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+
+            // Query and present the list of categories for the logged in user
+            string? userId= _userManager.GetUserId(User);
+
+            IEnumerable<Category> categoriesList = await _context.Categories
+                                                                 .Where(c => c.AppUserId == userId)
+                                                                 .ToListAsync();
+
+            ViewData["CategoryList"] = new MultiSelectList(categoriesList, "Id", "Name");
+
+
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
             return View();
@@ -80,7 +94,7 @@ namespace ContactPro.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
  
-        public async Task<IActionResult> Create([Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageFile")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageFile")] Contact contact, IEnumerable<int> selected)
         {
 
             ModelState.Remove("AppUserId");
@@ -88,8 +102,11 @@ namespace ContactPro.Controllers
             if (ModelState.IsValid)
             {
                 contact.AppUserId = _userManager.GetUserId(User);
+                contact.Created = DateTime.UtcNow;
 
-                if(contact.ImageFile != null)
+
+                // adding and converting image
+                if (contact.ImageFile != null)
                 {
                     contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
                     contact.ImageType = contact.ImageFile.ContentType;
@@ -102,11 +119,20 @@ namespace ContactPro.Controllers
                     contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
                 }
                 
-
-                
-                contact.Created = DateTime.UtcNow;
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
+
+
+                // loops over selected categoryIds to find the category entities in the database
+                foreach (int catergoryId in selected)
+                {
+                    Category? category = await _context.Categories.FindAsync(catergoryId);
+
+                    category!.Contacts.Add(contact);
+                }
+                // saves category changes to the database
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)));
@@ -124,11 +150,21 @@ namespace ContactPro.Controllers
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
+            string? userId = _userManager.GetUserId(User);
+
+            IEnumerable<Category> categoriesList = await _context.Categories
+                                                                 .Where(c => c.AppUserId == userId)
+                                                                 .ToListAsync();
+
+            ViewData["CategoryList"] = new MultiSelectList(categoriesList, "Id", "Name");
+
             var contact = await _context.Contacts.FindAsync(id);
             if (contact == null)
             {
                 return NotFound();
             }
+
+
             ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
             return View(contact);
         }
@@ -139,7 +175,7 @@ namespace ContactPro.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
       
-        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageData,ImageType,Created")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageData,ImageType,Created")] Contact contact, IEnumerable<int> selected)
         {
             if (id != contact.Id)
             {
@@ -168,7 +204,21 @@ namespace ContactPro.Controllers
                     }
 
                     _context.Update(contact);
-                    await _context.SaveChangesAsync();
+
+                    // TODO:
+                    // Add use of the ContactProService ????
+                    //
+                    //
+                    //// loops over selected categoryIds to find the category entities in the database
+                    //foreach (int catergoryId in selected)
+                    //{
+                    //    Category? category = await _context.Categories.FindAsync(catergoryId);
+
+                    //    category!.Contacts.Add(contact);
+                    //}
+                    //// saves category changes to the database
+                    //await _context.SaveChangesAsync();
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {

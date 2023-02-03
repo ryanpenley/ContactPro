@@ -61,7 +61,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2">
                             <label asp-for="State" class="control-label"></label>
-                            <select asp-for="State" class="form-control" asp-items="ViewBag.StatesList"></select>
+                            <select asp-for="State" class="form-select" asp-items="ViewBag.StatesList">
+                                <option></option>
+                            </select>
                             <span asp-validation-for="State" class="text-danger"></span>
                         </div>
                         <div class="col-12 col-lg-2 mt-2">
@@ -69,10 +71,10 @@
                             <input asp-for="ZipCode" class="form-control" />
                             <span asp-validation-for="ZipCode" class="text-danger"></span>
                         </div>
-@*                        <div class="col-12 col-lg-6 mt-3">
+                        <div class="col-12 col-lg-6 mt-3">
                             <label asp-for="Categories" class="control-label"></label>
-                            <select class="form-control" asp-items="@Model.CategoryList" asp-for="SelectedCategories" multiple></select>
-                        </div>*@
+                            <select class="form-control" asp-items="ViewBag.CategoryList" name="Selected" multiple></select>
+                        </div>
                         <div class="col-12 col-lg-6 mt-3">
                             <label asp-for="BirthDate" class="control-label"></label>
                             <input asp-for="BirthDate" class="form-control" />

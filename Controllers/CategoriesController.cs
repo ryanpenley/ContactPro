@@ -7,23 +7,40 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContactPro.Data;
 using ContactPro.Models;
+using Microsoft.AspNetCore.Identity;
+using ContactPro.Services.Interfaces;
+using ContactPro.Enums;
+using Microsoft.AspNetCore.Authorization;
+using ContactPro.Services;
+
 
 namespace ContactPro.Controllers
 {
+    [Authorize]
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Categories
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Categories.Include(c => c.AppUser);
-            return View(await applicationDbContext.ToListAsync());
+            string? userId = _userManager.GetUserId(User)!;
+
+            IEnumerable<Category> model = await _context.Categories
+                                                        .Where(c => c.AppUserId == userId)
+                                                        .Include(c => c.AppUser)
+                                                        .ToListAsync();
+
+
+
+            return View(model);
         }
 
         // GET: Categories/Details/5
@@ -37,6 +54,7 @@ namespace ContactPro.Controllers
             var category = await _context.Categories
                 .Include(c => c.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (category == null)
             {
                 return NotFound();
@@ -48,7 +66,6 @@ namespace ContactPro.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
@@ -57,15 +74,21 @@ namespace ContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,AppUserId")] Category category)
+
+        public async Task<IActionResult> Create([Bind("Id,AppUserId,Name")] Category category)
         {
+
+            ModelState.Remove("AppUserId");
+
             if (ModelState.IsValid)
             {
+                category.AppUserId = _userManager.GetUserId(User);
+
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
+
             return View(category);
         }
 
@@ -82,7 +105,6 @@ namespace ContactPro.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
             return View(category);
         }
 
