@@ -1,7 +1,7 @@
 :root {
-    --rp-primaryColor: #EE3EC9;
-    --rp-primaryColorDark: #60084e;
-    --rp-primaryColorLight: #aa0f8a;
+    --rp-primaryColor: #F13BCB;
+    --rp-primaryColorDark: #75085e;
+    --rp-primaryColorLight: #e810bb;
     --rp-secondaryColor: #42BBBF;
     --rp-secondaryColorLight: #287477;
     --cf-dark-color: #131313;
@@ -62,7 +62,7 @@ body {
 }
 
 nav {
-    background-color: var(--cf-primaryColorLight)
+    background-color: var(--rp-primaryColorLight)
 }
 
 h1,
@@ -217,22 +217,16 @@ figcaption {
 }
 
 
-
-
-/*
-// Custom Wave CSS*/
-
-.wave {
+.custom-shape-divider-top-1675782139 {
     position: absolute;
-    bottom: 0;
+    top: 60px;
     left: 0;
     width: 100%;
     overflow: hidden;
     line-height: 0;
-    transform: rotate(0deg);
 }
 
-    .wave svg {
+    .custom-shape-divider-top-1675782139 svg {
         position: relative;
         display: block;
         width: calc(100% + 1.3px);
@@ -240,14 +234,9 @@ figcaption {
         transform: rotateY(180deg);
     }
 
-    .wave .shape-fill {
-        fill: #42BBBF;
+    .custom-shape-divider-top-1675782139 .shape-fill {
+        fill: #E810BB;
     }
 
-/** For mobile devices **/
-@media (max-width: 767px) {
-    .wave svg {
-        width: calc(108% + 1.3px);
-        height: 107px;
-    }
-}
+
+
