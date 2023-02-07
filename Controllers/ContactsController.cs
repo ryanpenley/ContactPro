@@ -11,6 +11,8 @@ using ContactPro.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using ContactPro.Services.Interfaces;
+using ContactPro.Models.ViewModels;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace ContactPro.Controllers
 {
@@ -21,36 +23,112 @@ namespace ContactPro.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
         private readonly IContactProService _contactProService;
+        private readonly IEmailSender _emailService;
 
-        public ContactsController(ApplicationDbContext context, 
-                              UserManager<AppUser> userManager, 
+        public ContactsController(ApplicationDbContext context,
+                              UserManager<AppUser> userManager,
                                     IImageService imageService,
-                                    IContactProService contactProService)
+                                    IContactProService contactProService,
+                                    IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
             _contactProService = contactProService;
+            _emailService = emailService;
         }
 
         // GET: Contacts
-        
-        public async Task<IActionResult> Index()
+
+        public async Task<IActionResult> Index(string? swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
+            
             string userId = _userManager.GetUserId(User)!;
 
             List<Contact> contacts = new List<Contact>();
 
             IEnumerable<Contact> model = await _context.Contacts
                                                         .Where(c => c.AppUserId == userId)
-                                                        .Include(c=>c.Categories)
+                                                        .Include(c => c.Categories)
                                                         .ToListAsync();
 
             return View(model);
         }
 
+
+        // EmailContact
+        public async Task<IActionResult> EmailContact(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            string? appUserId = _userManager.GetUserId(User)!;
+
+            Contact? contact = await _context.Contacts
+                                           .FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == appUserId);
+
+            if(contact == null)
+            {
+                return NotFound();
+            }
+
+
+            // Instaniate EmailData
+
+            EmailData emailData = new EmailData()
+            {
+                EmailAddress = contact!.Email,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName
+            };
+
+            // Instaniate the ViewModel
+
+            EmailContactViewModel viewModel = new EmailContactViewModel()
+            {
+                Contact = contact,
+                EmailData = emailData
+            };
+
+
+            return View(viewModel);
+        }
+
+
+        // POST: Email Contact
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmailContact(EmailContactViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                string? swalMessage = string.Empty;
+
+                try
+                {
+                    await _emailService.SendEmailAsync(viewModel.EmailData!.EmailAddress!, viewModel.EmailData.EmailSubject!, viewModel.EmailData.EmailBody!);
+
+                    swalMessage = "Success: Your Email has been sent!";
+
+                    return RedirectToAction(nameof(Index),new {swalMessage});
+                }
+                catch (Exception)
+                {
+                    swalMessage = "Error! Your Email Failed to Send!";
+                    return RedirectToAction(nameof(Index),new {swalMessage});
+                    throw;
+                }
+            }
+
+            return View(viewModel);
+        }
+
+
         // GET: Contacts/Details/5
-      
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -72,12 +150,12 @@ namespace ContactPro.Controllers
         }
 
         // GET: Contacts/Create
-   
+
         public async Task<IActionResult> Create()
         {
 
             // Query and present the list of categories for the logged in user
-            string? userId= _userManager.GetUserId(User);
+            string? userId = _userManager.GetUserId(User);
 
             IEnumerable<Category> categoriesList = await _context.Categories
                                                                  .Where(c => c.AppUserId == userId)
@@ -96,7 +174,7 @@ namespace ContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
- 
+
         public async Task<IActionResult> Create([Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageFile")] Contact contact, IEnumerable<int> selected)
         {
 
@@ -121,7 +199,7 @@ namespace ContactPro.Controllers
                 {
                     contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
                 }
-                
+
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
 
@@ -143,7 +221,7 @@ namespace ContactPro.Controllers
         }
 
         // GET: Contacts/Edit/5
-     
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -154,8 +232,8 @@ namespace ContactPro.Controllers
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
             var contact = await _context.Contacts
-                                        .Include(c=>c.Categories)
-                                        .FirstOrDefaultAsync(c=>c.Id == id);
+                                        .Include(c => c.Categories)
+                                        .FirstOrDefaultAsync(c => c.Id == id);
 
 
             // query and present the list of categories for the logged in user
@@ -184,11 +262,9 @@ namespace ContactPro.Controllers
         }
 
         // POST: Contacts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-      
+
         public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserId,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageData,ImageType,Created")] Contact contact, IEnumerable<int> selected)
         {
             if (id != contact.Id)
@@ -216,7 +292,7 @@ namespace ContactPro.Controllers
                     {
                         contact.BirthDate = DateTime.SpecifyKind(contact.BirthDate.Value, DateTimeKind.Utc);
                     }
-                      
+
                     _context.Update(contact);
                     await _context.SaveChangesAsync();
 
@@ -224,7 +300,7 @@ namespace ContactPro.Controllers
 
                     // Added ContactProService
 
-                    if(selected != null)
+                    if (selected != null)
                     {
                         // 1. Remove Contact's categories
                         await _contactProService.RemoveAllContactCategoriesAsync(contact.Id);
@@ -253,7 +329,7 @@ namespace ContactPro.Controllers
         }
 
         // GET: Contacts/Delete/5
-   
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -275,7 +351,7 @@ namespace ContactPro.Controllers
         // POST: Contacts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-  
+
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Contacts == null)
@@ -287,14 +363,14 @@ namespace ContactPro.Controllers
             {
                 _context.Contacts.Remove(contact);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ContactExists(int id)
         {
-          return (_context.Contacts?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Contacts?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

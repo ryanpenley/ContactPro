@@ -12,7 +12,7 @@ using ContactPro.Services.Interfaces;
 using ContactPro.Enums;
 using Microsoft.AspNetCore.Authorization;
 using ContactPro.Services;
-
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace ContactPro.Controllers
 {
@@ -21,27 +21,95 @@ namespace ContactPro.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailService;
 
-        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public CategoriesController(ApplicationDbContext context, 
+                                    UserManager<AppUser> userManager, 
+                                    IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // GET: Categories
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
+
+
             string? userId = _userManager.GetUserId(User)!;
 
             IEnumerable<Category> model = await _context.Categories
                                                         .Where(c => c.AppUserId == userId)
-                                                        .Include(c => c.AppUser)
+                                                        .Include(c => c.Contacts)
                                                         .ToListAsync();
 
 
 
             return View(model);
         }
+
+        // GET: Email Category
+        public async Task<IActionResult> EmailCategory(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            string? userId = _userManager.GetUserId(User)!;
+
+            Category? category = await _context.Categories
+                                           .Include(c => c.Contacts)
+                                           .FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == userId);
+
+            if(category == null)
+            {
+                return NotFound();
+            }
+
+            List<string> emails = category!.Contacts.Select(c => c.Email).ToList()!;
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.Name,
+                EmailAddress = string.Join("; ", emails),
+                EmailSubject = $"Group Message: {category.Name}",
+            };
+
+            return View(emailData);
+        }
+
+        // POST: Email Category
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmailCategory(EmailData emailData)
+        {
+            
+            if (ModelState.IsValid)
+            {
+                string? swalMessage = string.Empty;
+
+                try
+                {
+                    await _emailService.SendEmailAsync(emailData!.EmailAddress!, emailData.EmailSubject!, emailData.EmailBody!);
+
+                    swalMessage = "Success: Your Email has been sent!";
+
+                    return RedirectToAction(nameof(Index), new { swalMessage });
+                }
+                catch (Exception)
+                {
+                    swalMessage = "Error! Your Email Failed to Send!";
+                    return RedirectToAction(nameof(Index), new { swalMessage });
+                    throw;
+                }
+            }
+            
+            return View(emailData);
+        }
+
 
         // GET: Categories/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -70,8 +138,6 @@ namespace ContactPro.Controllers
         }
 
         // POST: Categories/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
 
@@ -109,8 +175,6 @@ namespace ContactPro.Controllers
         }
 
         // POST: Categories/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,AppUserId")] Category category)

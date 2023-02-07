@@ -24,7 +24,7 @@
             <div class="row g-3 p-2">
                 <div class="col-12 col-lg-4">
                     <div class="square-img-container">
-                        <img id="contactImage" class="square-img" src="@_ImageService.ConvertByteArrayToFile(Model.ImageData!, Model.ImageType!)" style="height:fit-content" />
+                        <img id="contactImage" class="square-img" src="@_ImageService.ConvertByteArrayToFile(Model.ImageData!, Model.ImageType!)" style="height:410px" />
                     </div>
                     <div>
                         <input asp-for="ImageFile" class="form-control" accept=".png,.jpg,.jpeg,.gif" onchange="document.getElementById('contactImage').src= window.URL.createObjectURL(this.files[0])" />

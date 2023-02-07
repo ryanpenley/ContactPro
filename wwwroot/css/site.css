@@ -1,9 +1,9 @@
 :root {
-    --cf-primaryColor: #0869b8;
-    --cf-primaryColorDark: #002a4e;
-    --cf-primaryColorLight: #edf5fc;
-    --cf-secondaryColor: #fff0d9;
-    --cf-secondaryColorLight: #FFF8EC;
+    --rp-primaryColor: #EE3EC9;
+    --rp-primaryColorDark: #60084e;
+    --rp-primaryColorLight: #aa0f8a;
+    --rp-secondaryColor: #42BBBF;
+    --rp-secondaryColorLight: #287477;
     --cf-dark-color: #131313;
     --cf-light-gray: #d9d9d9;
     --cf-light-color: #eeeeee;
@@ -139,11 +139,11 @@ main {
 .editIcons {
     font-size: 1.5rem;
     opacity: .9;
-    color: var(--cf-primaryColorDark);
+    color: var(--rp-primaryColorDark);
 }
 
     .editIcons:hover {
-        color: var(--cf-primaryColor);
+        color: var(--rp-primaryColor);
         font-weight: bold;
         opacity: 1;
         cursor: pointer;
@@ -156,7 +156,7 @@ main {
 }
 
 figcaption {
-    color: var(--cf-dark-color);
+    color: var(--rp-dark-color);
     font-size: 0.8rem;
     text-align: center;
 }
@@ -168,22 +168,22 @@ figcaption {
 
 .footer {
     flex-shrink: 0;
-    background-color: var(--cf-secondaryColor);
+    background-color: var(--rp-secondaryColor);
 }
 
 .copyright {
-    color: var(--cf-primaryColorDark);
+    color: var(--rp-primaryColorDark);
     font-size: .9rem;
 }
 
 .socialicons {
-    color: var(--cf-primaryColorDark);
+    color: var(--rp-primaryColorDark);
     opacity: .9;
     font-size: 2rem;
 }
 
     .socialicons:hover {
-        color: var(--cf-primaryColor);
+        color: var(--rp-primaryColor);
         opacity: 1;
         cursor: pointer;
     }
@@ -213,5 +213,41 @@ figcaption {
 @media (min-width: 1200px) {
     .heroTitle {
         font-size: 3.5rem;
+    }
+}
+
+
+
+
+/*
+// Custom Wave CSS*/
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    transform: rotate(0deg);
+}
+
+    .wave svg {
+        position: relative;
+        display: block;
+        width: calc(100% + 1.3px);
+        height: 150px;
+        transform: rotateY(180deg);
+    }
+
+    .wave .shape-fill {
+        fill: #42BBBF;
+    }
+
+/** For mobile devices **/
+@media (max-width: 767px) {
+    .wave svg {
+        width: calc(108% + 1.3px);
+        height: 107px;
     }
 }
