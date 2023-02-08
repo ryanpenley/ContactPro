@@ -248,27 +248,3 @@ figcaption {
         fill: #e810bb;
     }
 
-
-/* slant above footer */
-
-.bottomSlant {
-    position: absolute;
-    bottom: 60px;
-    left: 0;
-    width: 100%;
-    overflow: hidden;
-    line-height: 0;
-    transform: rotate(180deg);
-}
-
-    .bottomSlant svg {
-        position: relative;
-        display: block;
-        width: calc(100% + 1.3px);
-        height: 84px;
-        transform: rotateY(180deg);
-    }
-
-    .bottomSlant .shape-fill {
-        fill: #42BBBF;
-    }

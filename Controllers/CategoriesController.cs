@@ -218,6 +218,7 @@ namespace ContactPro.Controllers
 
             var category = await _context.Categories
                 .Include(c => c.AppUser)
+                .Include(c => c.Contacts)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (category == null)
             {
