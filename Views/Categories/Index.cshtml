@@ -6,14 +6,16 @@
 
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Categories";
 }
 
-<h1>Index</h1>
+<h1>My Categories</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="row">
+    <div class="col-12 text-end mb-2">
+        <a class="btn btn-outline-primary rounded-pill" asp-action="Create">Create New</a>
+    </div>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -33,11 +35,14 @@
                 <td>
                     @if (item.Contacts.Count != 0)
                     {
-                        <a asp-action="EmailCategory" asp-route-id="@item.Id">Email</a> <span> | </span>
+                        <a class="me-3 editIcons" asp-action="EmailCategory" asp-route-id="@item.Id"><i class="bi bi-envelope-fill "></i></a>
                     }
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    @*                    <a class="me-3 editIcons" asp-action="Edit" asp-route-id="@contact.Id"><i class="bi bi-pencil-fill "></i></a>
+                <a class="me-3 editIcons" asp-action="EmailContact" asp-route-id="@contact.Id"><i class="bi bi-envelope-fill "></i></a>
+                <a class="me-3 editIcons" asp-action="Delete" asp-route-id="@contact.Id"><i class="bi bi-trash-fill text-danger "></i></a>*@
+                    <a class="me-3 editIcons" asp-action="Edit" asp-route-id="@item.Id"><i class="bi bi-pencil-fill "></i></a>
                     @*                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |*@
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <a class="me-3 editIcons" asp-action="Delete" asp-route-id="@item.Id"><i class="bi bi-trash-fill text-danger "></i></a>
                 </td>
             </tr>
         }
