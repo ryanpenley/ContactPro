@@ -53,8 +53,8 @@ namespace ContactPro.Data
         {
             AppUser demoUser = new AppUser()
             {
-                UserName = "demologin@addressbookgpt.com",
-                Email = "demologin@addressbookgpt.com",
+                UserName = "demologin@addressbookplus.com",
+                Email = "demologin@addressbookplus.com",
                 FirstName = "Demo",
                 LastName = "Login",
                 EmailConfirmed = true
