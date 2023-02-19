@@ -1,9 +1,9 @@
 :root {
-    --rp-primaryColor: #F13BCB;
-    --rp-primaryColorDark: #75085e;
-    --rp-primaryColorLight: #e810bb;
-    --rp-secondaryColor: #42BBBF;
-    --rp-secondaryColorLight: #287477;
+    --rp-primaryColor: #0069BC;
+    --rp-primaryColorDark: #003F70;
+    --rp-primaryColorLight: #1095FB;
+    --rp-secondaryColor: #A2A0A0;
+    --rp-secondaryColorLight: #CFCECE;
     --rp-dark-color: #131313;
     --rp-light-gray: #d9d9d9;
     --rp-light-color: #eeeeee;
@@ -72,7 +72,7 @@ nav {
 }
 
 #hamburgerIcon {
-    color: white;
+    color: var(--rp-primaryColor);
 }
 
 h1,
@@ -226,25 +226,4 @@ figcaption {
     }
 }
 
-/* slant below navbar */
-.custom-shape-divider-top-1675822008 {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    overflow: hidden;
-    line-height: 0;
-}
-
-    .custom-shape-divider-top-1675822008 svg {
-        position: relative;
-        display: block;
-        width: calc(100% + 1.3px);
-        height: 84px;
-        transform: rotateY(180deg);
-    }
-
-    .custom-shape-divider-top-1675822008 .shape-fill {
-        fill: #e810bb;
-    }
 
